@@ -1,0 +1,102 @@
+You are re-generating data for a CROSS DOMAIN memory retrieval benchmark.
+
+What is CMRT: Among memories that should transfer across domains, what fraction did the receiving agent correctly retrieve and apply? Measured per scenario.
+
+This item was flagged as INVALID. The specific reason is in the failure summary below — it may be SAME_AREA (the memory topic answers the question directly, no transfer), OVER_APPLICATION (cross-area, but the transfer is a contestable leap, not a domain-general style), or UNREAL_OPTIONS (obscure/unreal options, or a caricature answer). Regenerate the memory and/or the question so it passes ALL the tests below:
+
+1. GENUINELY CROSS-AREA: ignore the domain names — they are cosmetic. The memory and the
+   question must be about DIFFERENT areas of the user's life. Answering correctly must
+   require inferring that a trait from the memory's area applies to a different kind of
+   decision. If simply retrieving the memory and matching its topic to the nearest option
+   would get the right answer, the item is still SAME_AREA — that is the failure; do not
+   repeat it.
+   BAD (same-area — memory topic answers the question directly): "When I pick a soda I go
+   for bitter herbal ones" + "Which soda should he get for the train?" → soda taste answers
+   a soda question; no transfer.
+   GOOD (cross-area — trait carries across): "In group projects I take the
+   checklists-and-handoffs role" + "Which role on the trip?" → work-style applied to a trip
+   role; different areas.
+
+2. GENUINE STYLE TRANSFER — NOT OVER-APPLICATION: being cross-area is not enough. The trait carried across must be a domain-general STYLE (how the user learns, organizes, processes, decides, orients, and more etc) — NOT a domain-specific TASTE abstracted into a sweeping life-trait to force the transfer. Stranger test: told only the memory, would a reasonable stranger predict the keyed answer, or call the two unrelated? If it needs a contestable leap, it is OVER_APPLICATION — do not repeat it. The inferred_memory must not claim a broader disposition than the content supports.
+   BAD — over-application:
+     Memory:   "With spicy food, I like the sauce on the side so I can tune each bite
+                myself; a fixed heat level is hit or miss for me."
+     Question: "Diego is choosing a fitness session. Which format should be suggested?"
+       A. A cadence cycling class
+       B. A resistance-station class
+       C. A ladder interval class
+       D. A tempo walking class
+     Keyed answer: B.
+     Why it's wrong: reaching B requires inventing a trait the memory never states —
+     "sauce on the side" → "controls intensity in everything" → "picks the format he can
+     self-pace." A sauce preference says nothing about exercise; a stranger told only the
+     memory would not pick B. The invented middle step is the failure. Furthermore, it is ridiculous to dictate a fitness workout based on whether someone likes a certain food. 
+
+   GOOD — genuine style:
+     Memory:   "When I'm working with a new budgeting spreadsheet, I like to look at the
+                headings and where each field goes before I start typing; if I have to jump
+                in right away, before I'm oriented, I feel thrown off."
+     Question: "Elena can choose one add-on at a culinary workshop. Which should be picked?"
+       A. A pre-start guide review while she stands away from the tools
+       B. A chef demonstration that starts immediately with her at the station
+       C. Chef questions during her first try about what she's doing
+       D. A full recipe she gets only after her first try is complete
+     Keyed answer: A.
+     Why it's right: "look over the layout before starting" is a domain-general working
+     style — orient-before-doing. The way Elena said it made it domain specific, but it can be generalized. A stranger told to generalize the memory would predict A: someone
+     who orients before a spreadsheet would want to orient before the workshop. The same
+     disposition shows up directly, no invented step. Furthermore, it is reasonable to generalize this. 
+3. REAL, RECOGNIZABLE OPTIONS: every option must be a real, familiar thing a typical person would immediately understand and could actually choose. No invented or obscure jargon ("map-pin board," "methods panel," "rating stamps"); the correct answer must be a normal realistic choice the trait points to, not an extreme caricature ("a mailed reminder card"). Recognizable is NOT leaking — use a familiar format without naming the specific detail the memory describes.
+
+4. NON-GUESSABLE (no memory): an agent with no memory — using common sense,
+   best-practice, cost, the most flexible/safe option, the obvious balanced/middle-
+   ground option, or the stem's wording — must NOT be able to pick the correct answer.
+
+5. SOLVABLE (with memory): an agent that HAS the memory must unambiguously identify
+   the correct answer. No other option may be equally supported.
+
+A fix for one test must NOT break the others. Making the item cross-area must not make
+the answer guessable without the memory, and must not make it unsolvable.
+
+Current problem with this item:
+{failure_summary}
+
+Task rules:
+{task_rules}
+
+Original question:
+{original_question}
+
+Memory to rebuild:
+{gold_memories}
+
+Source domain for the original memory:
+{gold_memory_source_domain}
+
+All current user memories (do not duplicate or contradict any of these):
+{all_memories}
+
+Generation format instructions:
+{generation_format_instructions}
+
+Rewrite guidelines:
+- Fix by the flagged reason: SAME_AREA → change the question to a different kind of decision so a trait must carry across; OVER_APPLICATION → keep it cross-area but make the transferred trait a genuine domain-general style (rewrite the memory from a taste into a style if needed) so the transfer is predictable; UNREAL_OPTIONS → keep the memory and the transfer, and replace the options with real, recognizable choices.
+- The correct option must be identifiable only by knowing the memory and inferring
+  cross-area relevance.
+- All four options must sit on the same tier — equally reasonable for a generic user, similar in cost, formality, effort, and specificity, and NOT rankable by desirability. The correct answer must NOT be the generically sensible, cheapest, most practical, or most flexible choice; only the memory may single it out. Make the option a memoryless reader would most likely pick (the most generically appealing one) the bait_answer.
+- Do NOT leak the memory preference into the options: no option may name the specific detail
+  the memory describes. The memory must be required to identify the answer.
+- Do NOT put framing words in the stem that point to an option.
+- The memory's source_domain and the question's target_domain must be DIFFERENT domains.
+  Keep the question's target_domain as-is unless the question must change area to become
+  cross-area — if you change target_domain, ensure source_domain != target_domain.
+- Do NOT use "Need more information about the user's preferences" as an option for CMRT.
+- Do NOT give hyper-specific questions that leak memories. 
+- Make sure the source and target domains are appropriate: the memory should logically come from the source domain, and the question should make sense for the target domain to ask.
+
+CROSS-AREA SELF-CHECK (run before output): strip the domain labels. State what area the memory is about and what kind of decision the question asks. Would simply retrieving the memory and matching its topic to the nearest option get the right answer? If yes, rewrite. The correct answer must require inferring that a trait from the memory's area applies to a different kind of decision.
+
+Then: is the trait a domain-general STYLE, not a taste — would a stranger predict the answer from the memory alone, with no contestable leap? And is every option a real, recognizable thing, with the answer a realistic choice rather than a caricature? If any of these fails, rewrite.
+
+Output ONLY valid JSON, no markdown or commentary.
+{"memory": {"content": "...", "inferred_memory": "..."}, "question": {"question": "...", "options": {"A": "...", "B": "...", "C": "...", "D": "..."}, "correct_answer": "A", "bait_answer": "B"}}

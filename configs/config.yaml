@@ -1,0 +1,61 @@
+agent:
+  temperature: 0.0
+  max_output_tokens: 4096
+
+judge:
+  provider: openai
+  model: gpt-5-2025-08-07 
+  reasoning_effort: minimal
+  max_output_tokens: 4096
+
+data:
+  data_gen_dir: ../data/data
+  noise_file: ../data/noise.json
+
+memory:
+  top_k: 10
+  noise_seed: 42
+
+benchmark:
+  results_dir: results
+  users:
+    - u001
+    - u002
+    - u003
+    - u004
+    - u005
+    - u006
+    - u007
+    - u008
+    - u009
+    - u010
+    - u011
+    - u012
+    - u013
+    - u014
+    - u015
+    - u016
+    - u017
+    - u018
+    - u019
+    - u020
+    - u021
+    - u022
+    - u023
+    - u024
+    - u025
+    - u026
+    - u027
+    - u028
+    - u029
+    - u030
+    - u031
+    - u032
+    - u033
+    - u034
+    - u035
+    - u036
+    - u037
+    - u038
+    - u039
+    - u040

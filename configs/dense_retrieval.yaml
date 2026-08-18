@@ -1,0 +1,4 @@
+memory:
+  dense_retrieval:
+    embedding_model: BAAI/bge-m3
+    batch_size: 16

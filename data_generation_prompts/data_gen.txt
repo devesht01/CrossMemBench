@@ -1,0 +1,368 @@
+# PART 1 — SHARED SECTIONS
+
+## Benchmark Overview
+
+You are creating synthetic memories and questions for a CROSS DOMAIN memory retrieval benchmark.
+
+The core setup: a simulated user interacts with N specialist domains sequentially. assistant A learns information about the user in its domain specific context. Then, assistant B learns something about the user. After a few interactions, all the memories have been injected. Then assistant X gets a query which targets one of the three scenario categories:
+
+Positive transfer: Tests whether the system surfaces and utilizes useful cross-domain memory. 
+- Measuring: checking whether an assistant utilized memory correctly from ANOTHER DOMAIN.
+Genuine conflict: Tests whether the system can hold nuance with both memories rather than forcing one to override the other. In an ideal situation, the assistant will acknowledge both sides. 
+- Measuring: giving two genuinely conflicting personality traits, such as “user likes fine dining” and “user wants to save money”. Ideally domains should acknowledge both.
+
+## Metrics
+
+Metrics:
+Cross-domain Memory Recall Transfer (CMRT): Among memories that should transfer, what fraction did the receiving assistant correctly retrieve and apply? Measured per scenario.
+Dual Constraint Acknowledgement (DCA): Among scenarios with dual conflicting information, how often does the system acknowledge the conflict? DCA success means the system selects the option that best satisfies both COMPETING constraints simultaneously, with reasoning that demonstrates awareness of both. All DCA cases are designed as tradeoffs where a jointly-optimizing option exists.
+
+## Counts (Memory Counts Breakdown)
+
+Memory counts breakdown:
+CMRT: 5 MCQ
+DCA: 18 (9 pairs). 9 MCQ
+
+## ID Formats (Memory ID Format)
+
+Memory ID format (use exactly in memory_id and eval_memory_ids):
+CMRT: {user_id}_cmrt_01 … {user_id}_cmrt_05
+DCA: {user_id}_dca_01a / {user_id}_dca_01b … {user_id}_dca_09a / {user_id}_dca_09b
+
+## The Five Domains
+Financial
+Health
+Food and Dining
+Education
+Travel
+
+## Memory-Content Format
+MEMORY CONTENT FORMAT (applies to ALL memories — CMRT, DCA):
+The "content" field must ALWAYS be written in FIRST PERSON, as if the 
+user said it casually in conversation with the assistant. Never write 
+"[Name] said that..." or "[Name] prefers..." in the content field. 
+That phrasing belongs ONLY in inferred_memory.
+
+GOOD content field: "I don't pay extra for silent rooms because a steady 
+street hum helps me settle."
+BAD content: "Raj said that he does not pay extra for silent rooms."
+
+The inferred_memory field is third-person summary. The content field 
+is the user's own words. These must be clearly different — content 
+should sound like natural speech, inferred_memory should sound like a database entry. 
+The inferred_memory field must faithfully summarize the content without over-generalizing its scope.
+
+GOOD inferred_memory: "Raj prefers standard street-facing rooms over quiet ones."
+BAD inferred_memory: "I don't pay extra for silent rooms because a steady street hum helps me settle."
+
+## Diversity
+
+DIVERSITY: Do not repeat conflict structures, memory themes, or 
+question patterns from the example data. Each memory should feel 
+natural for this specific user while remaining objectively 
+answerable. Vary domains, topics, and tension types across all 
+14 questions.
+Avoid repeating obvious benchmark motifs but do not overfit to the profile. The generated cases should remain broad enough to be objective and unambiguous. The correct answer must be determined by the explicit memories, not by assumptions about the user's job, location, age, or identity.
+
+This prompt includes the illustrative examples used throughout THIS prompt — they exist to teach the pattern, not to be reused. Do NOT reuse their scenarios, topics, or phrasings (culinary/cooking workshops, the budgeting-template orientation, the loans-vs-snacking conflict, etc.). Every in-prompt example is off-limits as a topic.
+DCA conflict-type spread: at most 4 of the 9 DCA conflicts may be health/body-limitation (pain, injury, dietary, sensory, sleep, fatigue). The other 5 must come from these families: cost-vs-value, social/relational tension, values/principles, convenience/logistics, and more. Each must still be a genuine DCA — two simultaneously-true preferences that directly threaten each other (and is not orthogonal -- more on that below). Do not relabel a health conflict to satisfy the cap.
+
+## Independence
+
+INDEPENDENCE: No single memory may, on its own, determine the answer to a different question. Do not reuse the same underlying preference across a CMRT and a DCA (e.g., a CMRT keyed to "prefers light tangy pre-game food" makes a DCA about pre-game food trivial). Each question's answer must depend only on its own eval memories.
+
+## Position
+
+POSITION: distribute the correct answer across A, B, and C over the 9 questions. Option D's value is dependent on the question type (CMRT or DCA)
+
+## Overall
+
+Overall (this applies to all of the question categories):
+Answers should be unexpected - it should be hard for the assistant to “guess” the correct answer without the memory. How to do this for each category is outlined in its instructions.
+All answer choices should have a neutral tone - the answer choices should not sound confident or have strong words - especially if it is the correct answer. For incorrect answers, you may consider making them sound more confident and positive, but do not make them sound negative (e.g. trendy, flashy, as these can all have negative connotations as well)
+For CMRT, the source assistant and target assistant must be DIFFERENT domains. For DCA, the two memories must come from different domains.
+Make sure the source and target domains are appropriate: the memory should logically come from the source assistant, and the question should make sense for the target assistant to ask.
+---
+
+# PART 2 — CMRT
+
+## Purpose
+
+CMRT questions tests, among memories that should transfer across domains, what fraction did the receiving assistant correctly retrieve and apply? 
+
+## Rules
+
+*(All rules in this section are equally important. Where a rule has an example, the example follows directly beneath that rule.)*
+
+1. CMRT — RULE 0 (overrides all other CMRT rules if they conflict)
+   GUESSABILITY TEST (hard requirement): Without the memory, an assistant using ONLY general reasoning, common sense, domain best-practice, the question's wording, cost, or "which option is most practical/flexible/modest" must NOT be able to pick the correct answer. If any of those shortcuts lands on the correct answer, the question is INVALID — regenerate it. The correct answer may only become identifiable once you know the user's specific memory.
+
+2. PRIMARY PATTERN — EQUAL PLAUSIBILITY (use this by default): All four options must be lateral choices on the SAME tier — equally reasonable for a generic user in this context, and similar in cost, formality, effort, and specificity. They must NOT be rankable by general desirability; only the user's memory separates them.
+
+     BAD (ranks by formality; the casual one wins by context):
+       Q: "Aisha has one casual dinner slot." → {chef's tasting menu, seafood restaurant,
+        casual wings spot, modern dining room}
+
+     GOOD (four equally-casual, equally-plausible options; only memory disambiguates):
+       Q: "Aisha has one dinner slot while traveling." → {a wings-and-iced-tea spot, a taco
+        counter, a ramen bar, a corner diner}
+
+3. ANTI-PATTERN — DO NOT DO THIS: Do not build options as a "premium vs. modest" gradient where the fancy/expensive/polished option is the bait and the humble/practical/cheap option is the answer. "Modest / practical / cheap / most-flexible" is itself a default a model picks by context, so this does not hide the answer — it only relocates the tell. The bait must NOT be mechanically "the expensive option," and the correct answer must NOT be mechanically "the simple, cheap, or most-flexible option."
+
+4. SECONDARY PATTERN — COUNTER-DEFAULT (use only when equal-plausibility genuinely cannot apply): Make the user's preference run AGAINST the contextually-obvious choice, so the obvious choice becomes the bait. Caution: the "non-obvious" answer must not then be obvious via another route (cheapest, most flexible, or matching a stem word).
+
+5. NO STEM TELLS: The stem must not contain framing words that point to an option's surface form. Forbidden in the stem when they match the correct option: casual, small, tiny, brief, quick, simple, practical, professional, budget, cheap, premium, fancy, flexible, general. Keep the stem neutral ("Aisha has one dinner slot while traveling," NOT "one casual dinner slot").
+
+6. NO MEMORY LEAK IN OPTIONS: Options must not contain the specific detail the memory names (if the memory is about rowing machines, no option may say "gym with rowing machines"). Keep options abstract; the memory is what links the user to the right one.
+
+7. DISTRACTOR PARITY: All four options must be similar in length, specificity, and surface plausibility. The correct option must NOT be the most detailed, the cheapest, the most flexible/general, the only one of its category, or the only "sensible" choice.
+
+8. The answers to the questions should not have any emotional weight.
+
+   For example:
+
+   Question:
+   Priya wants to reduce discretionary spending. Which category should the financial assistant suggest cutting first?
+   A. A recurring clothing rental subscription
+   B. Weekly restaurant dinners with friends
+   C. Local outdoor activities
+   D. Pickleball court reservations
+   Correct: A
+   Bait: B
+
+   This is an example of bad bait. Language models will inherently bias towards not touching socially or emotionally sensitive topics, and would definitely rather not disturb your social interactions. And “recurring clothing rental subscription” makes it negative because recurring implies that it is a buy and forget kind of thing. To improve, she could remove “friends” from the weekly restaurant dinners with friends.
+
+9. (uniqueness): Each option must be a distinct, non-overlapping choice, and exactly one is supported by the memory. The correct answer's appeal must come ONLY from the memory — per Rule 0, a reader without it should prefer the bait.
+
+   Question:
+   Priya is reviewing subscriptions to keep one low-cost personal subscription. Which is most aligned?
+   A. Running route-planning app
+   B. Meditation app
+   C. Pickleball court booking membership
+   D. Netflix subscription
+   Correct: A
+   Bait: B
+
+   This is because one of the inferred memories is that Priya really likes running, but universally, a meditation app may be more “accepted” as a low cost personal subscription. Therefore, memories and answers to questions should have non-obvious, niche and unique traits to them.
+
+10. Questions AND answer choices should be worded in a neutral tone, avoiding strong words.
+
+    Avoid:
+
+    “Priya wants to reduce discretionary spending without feeling like she has no life. Which category should be cut first?”
+
+    Instead
+
+    The phrase “no life” makes it overly informal and weird for no reason.
+
+    Instead, rephrase to:
+    “Priya wants to reduce spending without sacrificing her preferences. Which category should be cut first?”
+
+    For answer choices, avoid:
+    “Trendy fashion place”
+
+    Trendy could be taken positively or negatively. Instead, rephrase to:
+    “Fashion place”
+
+11. Questions should be vague. Questions should not be hyper specific. The example from the previous point is perfect.
+
+    Avoid:
+
+    “Priya wants to reduce discretionary spending without feeling like she has no life. Which category should be cut first?”
+
+    The phrase “no life” makes it overly informal and weird for no reason.
+
+    Instead, rephrase to:
+    “Priya wants to reduce spending without sacrificing her preferences. Which category should be cut first?”
+
+    As you can see, the phrase “preferences” is very vague. What preferences? Without the proper memory, the assistant will not be able to give the correct answer. 
+
+12. CMRT specific rule: Avoid answer choices in the style of "need more information about the user" for CMRT ONLY.
+
+13. CMRT — CROSS-DOMAIN REQUIREMENT (hard requirement): Routing the memory to one assistant and the question to another does NOT make an item cross-domain. The assistant labels are not there for cosmetic purposes. An item is genuinely cross-domain only if the memory and the question are about DIFFERENT areas of the user's life, so that answering requires carrying a trait or preference from one area into a different kind of decision — not recalling the same topic.
+    Note: the memory need not be about a physical object. It can be a habit, a sensitivity, a learning style, a spending tendency, a comfort preference — anything. What matters is that the area of life the question asks about differs from the area the memory is about, and a trait carries across.
+    THE TEST (apply to every item): ignore the assistant names. Would a system that simply retrieved the memory and matched its topic to the nearest option get the right answer? If yes, the item is SAME-AREA RECALL — INVALID. The correct answer must require inferring that a trait from the memory's area is relevant to a different kind of decision.
+
+    INVALID — SAME-AREA RECALL (do not generate):
+
+    Memory (food_dining_assistant): "When I pick a soda I go for the bitter herbal ones, not sweet fruity colas." Question (travel_assistant): "Which soda should he get for the train?" → the bitter herbal one.
+
+    Strip the labels: his soda taste answers a soda question. Same area, no transfer; a plain retriever solves it. The "travel" routing is cosmetic. INVALID.
+
+    VALID — CROSS-AREA TRANSFER (generate this):
+
+    Memory (education_assistant): "In group projects I take the checklists-and-handoffs role; slides aren't my strength." Question (travel_assistant): "Which role on the trip?" → the lodging/logistics coordinator. Work-style → trip role: different areas.
+
+14. CMRT — NO OVER-APPLICATION (STYLE, not TASTE) (hard requirement): A trait transfers across domains ONLY if it is a domain-general STYLE — how the user approaches a whole class of situations (how they learn, organize, process, decide, orient) — NOT a domain-specific TASTE. Do NOT take a narrow preference and abstract it into a sweeping life-trait to force a transfer. The inferred_memory must not claim a broader disposition than the content literally supports.
+    THE STRANGER TEST (apply to every item): told ONLY the memory, would a reasonable stranger predict the keyed answer — or would they say "those two things are unrelated"? If the transfer needs a contestable leap, it is OVER-APPLICATION — regenerate.
+
+    INVALID — OVER-APPLICATION (do not generate):
+    Memory (food_dining_assistant): "With spicy food I like the sauce on the side so I can tune each bite myself; a fixed heat level is hit or miss." Question (health_assistant): "Which fitness session format?" → a self-directed resistance-station class.
+    Liking sauce on the side is a food taste. Reaching a fitness format requires laundering it into "controls intensity in all experiences" — a disposition the content never establishes. A stranger would call the two unrelated. INVALID.
+
+    VALID — GENUINE STYLE TRANSFER (generate this):
+    Memory (financial_assistant): "With a new budgeting template I look over the headings and where each field goes before I start typing; jumping in unoriented throws me off." Question (food_dining_assistant): "Which culinary workshop add-on?" → a pre-start guide review before she's at the tools.
+    Orienting before diving into a new task is a general working style that plausibly governs any new hands-on activity. A stranger would predict it. VALID.
+
+   (Legit transferable dispositions include but are not limited to: how someone orients to new tasks; how they organize information; physical-vs-digital processing; self-direction; depth-vs-breadth; risk tolerance (predictability-seeking vs. chasing upside); social-vs-solo (kept on track around others vs. works better alone); sensory sensitivity (noise, crowding, stimulation, light); time-of-day energy (when focus peaks); and resource-concentration values (one excellent thing vs. several modest ones). Use a wide spread of these across the 5 CMRT items — do not lean on the same two or three. Tastes — specific foods, aesthetics — generally do NOT transfer. Values transfer ONLY when the value runs AGAINST the common-sense, cheap, or socially-desirable default; if the value-aligned option is also what a memoryless model would pick anyway, it fails Rule 0.)
+15. OPTIONS MUST BE REAL AND RECOGNIZABLE (hard requirement): Every option must be a real, familiar thing a typical person would immediately understand and could actually choose. No invented or obscure jargon (e.g. "map-pin board," "methods panel," "rating stamps," "poster walk"). The correct answer must be a normal, realistic choice the trait points to — NOT an extreme caricature of it (a clinic reminder is realistically a text, a call, a portal alert, or a card; "a mailed reminder card" is a stretch a real person wouldn't pick).
+    Recognizable is NOT the same as leaking (see Rule 6): use a common, familiar format without naming the specific detail the memory describes.
+   CMRT — CONTENT SHOWS, DOESN'T TELL (hard requirement): The content field describes a concrete behavior in its own domain only — never name the underlying style, the dimension, or the principle. Stating the abstraction turns the question into read-and-match instead of transfer. Drop any "...because [principle]" or "...that's how I [trait]" tail; the generalization lives ONLY in inferred_memory.
+
+   BAD: "Numbered ratings make me overthink my workouts; I do better with plain labels like easy/okay/too-much." (names the numbers-vs-labels axis)
+
+   GOOD: "After each run I just jot down whether it felt easy, okay, or too much." (style must be inferred)
+
+## Self-check
+
+**CMRT SELF-CHECK (IMPORTANT):**
+
+SELF-CHECK (run before emitting each CMRT item; if YES to ANY, regenerate):
+Answer using ONLY the question + options, no memory.
+  (a) Could I pick the answer because a stem word matches one option?
+  (b) Could I pick it because it's the cheapest, most modest/practical, or most
+      flexible/general?
+  (c) Could I pick it on best-practice or common-sense reasoning?
+  (d) Do the options rank by desirability, with one clearly "best" or "safest"?
+  (e) Now bring the memory back in and strip the assistant labels: is the memory about the same kind of thing the question asks the user to choose — i.e., would simply retrieving the memory and matching its topic to the nearest option get the answer? If yes, regenerate so the question is a different kind of decision and the answer requires inferring a trait's relevance across areas.
+  (f) Strip the assistant labels and read just the memory: is it a domain-general STYLE or a domain-specific TASTE? Told only the memory, would a stranger predict the keyed answer, or call the two unrelated? If it's a taste, or the link needs a contestable leap → over-application, regenerate.
+  (g) Is every option a real, recognizable thing a normal person would understand and actually choose, and is the correct answer a realistic choice rather than an extreme version of the trait? If any option is invented/obscure jargon, or the answer is a caricature, rewrite the options.
+  (h) Read just the content: does it name the style, dimension, or principle (any "...because/that's how I..." tail)? If so, the answer is read-and-match, not transfer — rewrite the content as a concrete instance only.
+
+
+If any is YES, rewrite using ALL OF THE RULES so all options sit on the same tier and
+only the memory disambiguates.
+
+# PART 3 — DCA
+
+## Purpose
+
+DCA tests whether the system, when two of the user's preferences directly THREATEN each other for the decision at hand, acknowledges both — rather than acting on one and damaging the other. Both preferences are true of the user, but honoring one comes at a direct cost to the other: they COMPETE. A system that attends to only one preference defaults to a one-sided option that sacrifices the other — so the correct answer, the option that best satisfies both at once, is reachable ONLY by holding both memories. Success means selecting that jointly-optimizing answer with reasoning that demonstrates awareness of both specific constraints. The answer must be the objectively dominant joint-optimum (one option clearly best for both) — never a subjective split-the-difference compromise, and never the obvious moderate pick.
+
+## Rules
+
+1. THE TWO MEMORIES MUST DIRECTLY THREATEN EACH OTHER. This is the single most important DCA rule. Both preferences are true of the user, but for this decision they actively work against each other: honoring one DIRECTLY UNDERMINES the other. They collide — you cannot fully act on one without damaging the other. If you could satisfy both at the same time with no sacrifice, they do NOT threaten each other and this is NOT a DCA — whether they point the same way (complementary) or are simply unrelated (orthogonal).
+
+   STRIP TEST (decisive): delete the answer options and read only the two preferences. Does pursuing one still actively work against the other? If the tension disappears once the options are gone, it was never a real conflict — it was staged by the option set. Rebuild.
+
+   GENUINE conflict (they threaten each other):
+     - Memory A: "I want my loans paid off aggressively"
+     - Memory B: "If I restrict food spending too much I rebound into random snack purchases after shifts"
+   Aggressive repayment demands cutting spending, but cutting food spending makes this user binge and spend MORE — honoring one directly attacks the other. Valid.
+
+   NOT a conflict — COMPLEMENTARY (they point the same way):
+     - Memory A: "I like plain outdoor trips with ponds"
+     - Memory B: "I want cheap weekend travel"
+   Both point to "a modest regional trip." No threat; they agree.
+
+   NOT a conflict — ORTHOGONAL (they are unrelated — the most common mistake):
+     - Memory A (health): "Caffeine after dinner keeps me awake past midnight, even one cup"
+     - Memory B (food_dining): "After an evening walk a warm drink stops me grazing; cold drinks don't help"
+   Question (target_assistant: food_dining_assistant): "Mara wants a drink after her evening walk. Which should the food and dining assistant suggest?"
+   A. A mug of mint tea
+   B. A cup of regular coffee
+   C. A chilled fruit smoothie
+   D. Need more information about the user's preferences
+   'Warm' and 'caffeine-free' sit on independent axes — satisfying one does not make the other harder, so the intersection is trivially large (mint tea, warm milk, decaf, hot water). The tension is staged by the options, not by the constraints themselves. In genuine DCA, satisfying one constraint must actively make it harder to satisfy the other. Do NOT produce items where the two constraints are on independent dimensions.
+
+   ORTHOGONAL can hide behind a constraint that feels tight. Two signatures to watch: (a) one memory is a scheduling / availability / logistics fact (a time slot, date, or location) rather than a preference; (b) the two are linked only by a soft stereotype, not a physical/causal collision. In both, the constraints sit on independent axes and one option satisfies both with no sacrifice — orthogonal, not DCA.
+   NOT a conflict — ORTHOGONAL (feels constrained, isn't): A (education) "For renewals I want a live instructor I can ask questions; recorded slides leave me unsure." + B (travel) "The week before my deadline, Tuesday evening is the only free stretch I have." Q "Which renewal course?" {Saturday live seminar / Tuesday live webinar / recorded}. Format (live) and timing (Tuesday) are independent — wanting live does NOT make Tuesday harder; a live course at her open slot serves both, and the Saturday option only stages a fake clash. Test: does honoring one preference ACTIVELY make the other harder? If a scheduling fact or a stereotype is doing the work, the answer is no — rebuild so the thing the user wants IS the thing that harms them.
+
+2. The correct answer must NOT be the structurally obvious compromise.
+   ANTI-PATTERN (do not do this): options arranged on a single scale — a "do-less/minimal" option, a "balanced middle" option, and a "do-more/maximal" option — with the balanced middle as the answer. A memoryless model picks the middle every time. This is the #1 DCA failure. The obvious balanced-sounding option should be a BAIT, never the correct answer.
+   PREFERRED STRUCTURE: offer three concrete, equally-plausible resolutions that do NOT line up on a single less-to-more scale. Each is a reasonable specific choice. The correct one is identifiable as satisfying both constraints ONLY by applying the two memories — not by being "the moderate option." Without the memories, the options must not be rankable by "which is most balanced."
+   The correct answer satisfies both by being a specific, non-obvious option that honors them together — NOT by splitting the difference. A split-the-difference "compromise" is both guessable (the moderate pick) and subjective (no objective winner).
+
+3. No option may name, restate, or combine the user's two preferences in its own text. This is critical. The correct option must be a concrete choice whose satisfaction of BOTH constraints becomes clear only when you apply the memories. If the correct option verbally contains both preferences, a memoryless model reads them off the option, restates them, and falsely appears to "reference both constraints" — which defeats the benchmark.
+
+   BAD (leaks both constraints): "A self-directed route with short segments and
+   planned pauses" — states preference A and preference B verbatim.
+
+   BAD (leaks both constraints): "An aggressive repayment plan with a small planned
+   food allowance" — states pay-down-loans and protect-food-budget verbatim.
+
+   GOOD (concrete; dual-fit requires the memory): options like "A weekend regional
+   rail pass," "A guided city walking tour," "A self-paced museum circuit with timed
+   entries" — only the memories (prefers self-direction; needs frequent rest) tell you
+   which fits both. The option does not announce that it satisfies the preferences.
+
+   Good: "Use an accelerated repayment plan with a small planned food allowance"
+    Bad: "Use an aggressive repayment plan that protects your dosa budget" The word "dosa" leaks memory content into the option.
+
+4. Option D is always "Need more information about the user's preferences" This catches models that have no memories — they should select D since they cannot cite specific preferences. Structure the other three concrete options so that: one option satisfies Memory A but sacrifices Memory B, one satisfies Memory B but sacrifices Memory A, and the correct option threads both. This structure ensures partial retrieval leads to a one-sided answer, making both memories necessary.
+
+5. The conflict patterns that work:
+   - Money vs desire: user wants something that costs money they are trying to save
+   - Health vs enjoyment: user likes a food or habit that conflicts with a health constraint
+   - Routine vs limitation: user has a routine they love but a physical, financial, or time constraint that limits it
+   - Intensity vs sustainability: user wants to go hard on something but has a reason they need to pace themselves
+   You can add more conflict patterns if you would like.
+
+6. THE KEYED ANSWER MUST UNIQUELY DOMINATE (hard requirement): A valid DCA is one where you have CONSTRUCTED an option that satisfies BOTH constraints better than every other option. That dominant option is the correct answer. If no option dominates — if the choice comes down to a subjective weighting of the two constraints — the item is not a valid DCA; drop it and build another.
+   Watch especially for options (or moves) that resolve the tension by AVOIDING it rather than balancing it. If a rational assistant can satisfy both preferences at least as well by opting out of the question's framing instead of picking your intended answer, then your answer is not the joint-optimum and the conflict was only real under an assumption the question never forced.
+
+   INVALID EXAMPLE: Memory 1 (financial_assistant) "I'm limiting café charges" + Memory 2 (education_assistant) "if I study in a café and buy nothing I feel like I'm taking up space" + Question "which study setup?".
+   A. A drip coffee ordered at the counter
+   B. A day pass at a coworking lounge
+   C. A packed lunch eaten at the studio
+   D. Need more information about the user's preferences
+   Correct: A
+
+   This question is INVALID. 
+   None of the constraints require a café, so the rational move is to work somewhere free, not buy a cheap coffee. The intended answer wins only inside an assumed café frame. INVALID.
+   
+   INVALID EXAMPLE (subjective tradeoff): Memory 1 (financial) "I want to keep trips cheap for the next year" + Memory 2 (travel) "I want a luxurious route" + Question "what should the travel assistant book".
+   A. a cheap plain bus 
+   B. a stunning expensive coastal drive 
+   C. a mid-price moderately-scenic train. 
+   D. Need more information about the user's preferences
+   The preferences genuinely threaten each other, but no option objectively dominates — whether the mid-price train beats the others depends on how the user weights cost vs scenery, which the memories never say. A real conflict with no objective winner is still INVALID.
+   This single requirement also rules out ties (two options equally good), genuine tradeoff frontiers (each option wins on one constraint — subjective, not objective), and over-constrained items (no option satisfies both). In all of these, no option uniquely dominates, so it is not a valid DCA.
+
+   VALID EXAMPLE (uniquely dominant): Memory 1 (health) "my knee can't take high-impact exercise anymore" + Memory 2 (travel) "while traveling I want a workout that really gets my heart rate up" + Question "what workout should the health assistant recommend on the trip?"
+   A. A hotel lap-swimming session
+   B. A guided trail run
+   C. A gentle stretching and mobility class
+   D. Need more information about the user's preferences
+   Correct: A. Intensity pulls toward impact, which attacks the knee — B wins only on cardio (sacrifices the knee), C only on low-impact (sacrifices the cardio goal); A is the only option strong on both. It uniquely dominates. VALID.
+
+Distribute the 9 DCA pairs across at least 4 different conflict patterns. Do not use any single pattern more than 3 times.
+
+## Self-check
+
+**DCA SELF-CHECK (IMPORTANT):**
+
+DCA SELF-CHECK (run per question with NO memory; if YES to any, regenerate):
+(a) Can I pick the answer because it's the most balanced / moderate / safe option?
+(b) Does the correct option's text name or restate both preferences, letting me
+    "reference both" without the memory?
+(c) Do the options form a single less-to-more scale with the answer in the middle?
+If YES to any: make the balanced option a bait, use concrete non-rankable
+resolutions, and strip both-preference language from the correct option.
+(d) Forget the options. Do the two preferences DIRECTLY THREATEN each other — does honoring one actively damage the other? If you could satisfy both at once with no sacrifice, they do NOT threaten each other — they are complementary (point the same way) or orthogonal (unrelated) — and either way it is not a DCA. Regenerate so honoring one preference clearly costs the other.
+(e) Given both memories, could a rational assistant do as well or better by rejecting an assumption the question makes that is not in the constraints, or does any option tie/beat the keyed answer? If YES → dominated, presupposed, or subjective. Regenerate so the keyed answer is the unique joint-optimum.
+
+---
+
+# PART 5 — SHARED SECTIONS
+
+## Output Instructions
+
+Instructions:
+Output ONLY valid JSON matching the structure of the attached example JSON. 
+Use the profile below for the user's name in all questions, memories, and inferred_memory fields.
+Set user_id in the output JSON to {user_id}.
+
+## Profile & Placeholders
+
+Profile:
+Name: {name}
+Summary: {profile_summary}
+Age range: {age_range}
+Location: {location}
+User ID: {user_id}
+
+---
+
+Example output format (match this structure — generate for the profile above, not for Priya):
+{example_json}

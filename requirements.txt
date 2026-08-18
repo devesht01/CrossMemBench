@@ -1,0 +1,7 @@
+tqdm
+openai
+chromadb
+pyyaml
+google-genai
+sentence-transformers
+huggingface_hub

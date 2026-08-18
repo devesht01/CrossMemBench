@@ -1,0 +1,58 @@
+You are re-generating data for a CROSS DOMAIN memory retrieval benchmark.
+
+What is DCA: two of the user's preferences DIRECTLY THREATEN each other for a decision — honoring one comes at a direct cost to the other. DCA success means the system selects the single option that best satisfies both at once, with reasoning that demonstrates awareness of both. A system that attends to only one preference defaults to a one-sided option that sacrifices the other, so the answer is reachable only by holding both memories. Every DCA has one objectively dominant jointly-optimizing option.
+
+This item was flagged as INVALID. The specific reason is in the failure summary below. Regenerate the two memories and/or the question so it passes ALL THREE tests:
+
+1. GENUINELY COMPETING — THE PREFERENCES MUST DIRECTLY THREATEN EACH OTHER: honoring one preference must come at a direct cost to the other. Strip test: forget the options and read only the two preferences — does pursuing one actively work against the other? If you could satisfy both at once with no sacrifice, they do NOT threaten each other — either they point the same way (COMPLEMENTARY) or they are independent (ORTHOGONAL) — and that is the failure; do not repeat it.
+   BAD (complementary — point the same way): "likes quiet pond walks" + "wants cheap weekend trips" → both favor a modest local outing; no threat.
+   BAD (orthogonal — independent): "no caffeine after dinner" + "wants a warm drink after a walk" → warm and caffeine-free are independent; a mint tea satisfies both with no sacrifice and is the obvious pick. The tension would be staged by the options, not real.
+   GOOD (threatening): "after late rehearsals craves a warm satisfying meal" + "a heavy late dinner wrecks her sleep" → a satisfying meal pulls toward heavy, which directly attacks sleep; the answer threads both (a small brothy bowl).
+
+2. NON-GUESSABLE (no memory): an agent with no memory — using common sense, best-practice, cost, the most flexible/safe option, the obvious balanced/middle-ground option, or the stem's wording — must NOT be able to pick the correct answer. If the resolution is the obvious choice even without the memories, the conflict is too weak (this is the second reason the mint-tea example above fails — an evening warm drink is commonsensically caffeine-free).
+
+3. SOLVABLE & UNIQUELY DOMINANT (with memory): an agent that HAS both memories must unambiguously identify the correct answer as the SINGLE option that best satisfies BOTH — it must objectively dominate. No other option may satisfy both as well (no tie), the choice must not come down to subjective weighting, and no option may do as well by rejecting an assumption the memories never force (no presupposed/escapable conflict).
+
+A fix for one test must NOT break the others. Making the memories threaten each other must not make the answer guessable as "the moderate option," and must not make it unsolvable.
+
+Current problem with this item:
+{failure_summary}
+
+Task rules:
+{task_rules}
+
+Original question:
+{original_question}
+
+Memories to rebuild:
+{gold_memories}
+
+Source domains for the original memories:
+{gold_memory_source_domains}
+
+All current user memories (do not duplicate or contradict any of these):
+{all_memories}
+
+Generation format instructions:
+{generation_format_instructions}
+
+Rewrite instructions:
+- Rewrite the two memories so they DIRECTLY THREATEN each other for this question: honoring one must come at a real cost to the other. Verify with the strip test — the tension must hold even with the options removed. Both must stay true of the user and plausible.
+- The correct option must be the specific resolution that best satisfies BOTH preferences, identifiable only by knowing both memories.
+- The correct answer must NOT be the obvious balanced/middle-ground option (one flanked by a "do-less" and a "do-more" extreme). Make the obvious moderate option a bait. Use several specific resolutions on the same tier, not a single less-to-more scale.
+- No single option may name or restate both preferences.
+- Do NOT leak either preference into the options: no option may name the specific detail a memory describes. The memories must be required to identify the answer.
+- Do NOT put framing words in the stem that point to an option.
+- The two memories MUST come from two DIFFERENT domains (cross-domain). Keep the question's target domain as-is.
+- Option D must remain exactly: "Need more information about the user's preferences."
+- Structure the three concrete options so that: one option 
+  satisfies Memory A but sacrifices Memory B, one satisfies 
+  Memory B but sacrifices Memory A, and the correct option 
+  threads both. This structure ensures partial retrieval 
+  leads to a one-sided answer, making both memories necessary.
+- Make sure the source and target domains are appropriate: the memory should logically come from the source domain, and the question should make sense for the target domain to ask.
+
+SELF-CHECK (run before output): (1) Forget the options — does honoring one preference directly threaten/damage the other? If you could satisfy both with no sacrifice (whether they agree or are independent), it is not a real conflict — rewrite. (2) Is the keyed answer the single objectively dominant option for both — no tie, no subjective weighting, nothing beatable by escaping the frame? (3) Without the memories, is the answer non-obvious (not the commonsense/moderate pick)?
+
+Output ONLY valid JSON, no markdown or commentary.
+{"memories": [{"content": "...", "inferred_memory": "..."}, {"content": "...", "inferred_memory": "..."}], "question": {"question": "...", "options": {"A": "...", "B": "...", "C": "...", "D": "..."}, "correct_answer": "A", "bait_answer": "B"}}

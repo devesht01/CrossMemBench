@@ -1,0 +1,4 @@
+memory:
+  full_dump:
+    insert_inferred: false
+
